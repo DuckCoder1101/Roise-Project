@@ -1,5 +1,6 @@
 node_modules/
-build/config.js
 .env
-src/
+tsconfig.json
+src/config.ts
+build/
 .gitignore

@@ -19,15 +19,11 @@ const SlashCommand = new SlashCommandBuilder()
 export default {
     data: SlashCommand,
     async execute(client: Client, interaction: ChatInputCommandInteraction) {
-        let value = Math.floor(Math.random() * 100);
+        const value = Math.floor(Math.random() * 100);
         let message = "";
 
         const user1 = interaction.options.getUser("user1");
         const user2 = interaction.options.getUser("user2");
-
-        if ((user1.id == "708797379016523837" && user2.id == "818653932779733032") || (user2.id == "708797379016523837" && user1.id == "818653932779733032")) {
-            value = 100;   
-        }
 
         if (value == 100) message = "💗 Amor a primeira vista!";
         else if (value > 85) message = "💖 Grande paixão!";

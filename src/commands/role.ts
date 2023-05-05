@@ -1,4 +1,13 @@
-import { ChatInputCommandInteraction, Client, GuildMemberRoleManager, SlashCommandBuilder } from 'discord.js'
+import { 
+    ChatInputCommandInteraction, 
+    Client, 
+    GuildMemberRoleManager, 
+    SlashCommandBuilder, 
+    ActionRowBuilder, 
+    ButtonBuilder, 
+    ButtonStyle } from "discord.js";
+
+import config from "../config";
 
 const SlashCommand = new SlashCommandBuilder() 
     .setName("role")
@@ -42,30 +51,46 @@ export default {
         const isOwner = interaction.guild.ownerId == interaction.user.id;
 
         if ((!userHasPermissions || authorRole.highest.position >= role.position) && !isOwner) {
-            interaction.reply(`Você não tem permissões o sulficiente para alterar o cargo do(a) ${target.username}.`);
+            await interaction.reply(`Você não tem permissões o sulficiente para alterar o cargo do(a) ${target.username}.`);
             return;
         }
 
         if (role.position >= clientMember.roles.highest.position) {
-            interaction.reply(
+            await interaction.reply(
                 `Desculpe, mas eu não tenho permissões o sulficiente para alterar o cargo ${role.name}. \nPara funcionar, coloque o cargo @${clientMember.roles.highest.id} acima de todos os outros cargos do servidor.`
             );
             return;
         }
 
         try {
-            const member = interaction.guild.members.resolve(client.user.id);
-            if (action == "assign") {
-                await member.roles.add(role.id);                
-                interaction.reply("Cargo atribuido com sucesso!");
-            } else if (member.roles.cache.find(r => r.id == role.id)) {
+            const member = await interaction.guild.members.fetch(target.id);
+
+            if (action == "assign" && !member.roles.cache.find((r) => r.id == role.id)) {
+                await member.roles.add(role.id);          
+                interaction.reply("✅ Cargo atribuido com sucesso!");
+            } else if (action == "remove" && member.roles.cache.find(r => r.id == role.id)) {
                 await member.roles.remove(role.id);
-                interaction.reply("Cargo removido com sucesso!");
+                interaction.reply("✅ Cargo removido com sucesso!");
+            } else if (action == "assign") {
+                interaction.reply("❌ A ação não pode ser feita, pois o usuário já possuia o cargo!");
+            } else {
+                interaction.reply("❌ A ação não pode ser feita, pois o usuário não possuia o cargo!");
             }
         } catch (err) {
-            interaction.reply(
-                "Não foi possível atribuir/remover o cargo ao usuário, verifique se eu possuo permissões o sulficiente para isso e e tente novamente."
-            );
+            const url = config.guildInviteURL;
+            const row = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setLabel("Servidor da Rosie")
+                        .setURL(url)
+                        .setStyle(ButtonStyle.Link)
+                );
+                
+            await interaction.reply({
+                content: `❌ Não foi possível ${action == "assign" ? "atribuir" : "remover"} o cargo do usuário devido ao erro: ${err.message}.
+                Tente novamente, se o problema perssistir, chame o suporte.`,
+                components: [row as any]
+            });
         }
     }
 }

@@ -1,8 +1,8 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import updateClientCommands from "./systen/commandsManager";
-import setClientEvents from "./systen/events";
-import server from "./systen/server";
-import login from "./systen/login";
+
+import { execute, updateCommands } from "./util/commands";
+import server from "./dashboard/server";
+import config from "./config";
 
 const client = new Client({
     intents: [
@@ -11,15 +11,24 @@ const client = new Client({
 });
 
 async function main() {
-    client.on('ready', () => {
-        updateClientCommands(client);
-        setClientEvents(client);
-        
+    const TOKEN = config.TOKEN || process.env.TOKEN;
+    if (!config.TOKEN) {
+        process.env.NODE_ENV = "production";
+    }
+
+    client.once('ready', () => {
+        updateCommands(client, TOKEN);
         console.log("BOT online.");
     });
 
-    await server();
-    login(client);
+    client.on("interactionCreate", (interaction) => {
+        if (interaction.isChatInputCommand()) {
+            execute(client, interaction);
+        }
+    })
+
+    client.login(TOKEN);
+    await server(); 
 }
 
 main();
